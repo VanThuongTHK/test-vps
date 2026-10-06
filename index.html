@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laravel VPS Deployment Guide</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111827;
+      --panel-2: #172033;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --success: #34d399;
+      --border: #263247;
+      --code: #08111f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.10), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .container {
+      width: min(100% - 32px, 1100px);
+      margin: 0 auto;
+    }
+
+    header {
+      padding: 64px 0 36px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border: 1px solid rgba(56, 189, 248, .35);
+      border-radius: 999px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, .08);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.05;
+    }
+
+    .lead {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .stack {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stack span {
+      padding: 8px 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 36px 0 72px;
+    }
+
+    .toc, .section {
+      background: rgba(17, 24, 39, .92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.15);
+    }
+
+    .toc h2, .section h2 {
+      margin-top: 0;
+    }
+
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .toc a:hover {
+      text-decoration: underline;
+    }
+
+    .toc ol {
+      columns: 2;
+      padding-left: 22px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 700px) {
+      .toc ol { columns: 1; }
+    }
+
+    .section h2 {
+      color: #fff;
+      font-size: 26px;
+    }
+
+    .section p, .section li {
+      color: #cbd5e1;
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-left: 4px solid var(--accent);
+      background: rgba(56, 189, 248, .07);
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+
+    .success {
+      border-left-color: var(--success);
+      background: rgba(52, 211, 153, .07);
+    }
+
+    pre {
+      position: relative;
+      overflow-x: auto;
+      background: var(--code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      color: #dbeafe;
+      font-size: 14px;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .inline {
+      background: var(--code);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 6px;
+      color: #bae6fd;
+    }
+
+    .copy-btn {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      border: 1px solid var(--border);
+      background: #111827;
+      color: #cbd5e1;
+      padding: 6px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+
+    .checklist li {
+      padding: 7px 0;
+    }
+
+    .checklist li::before {
+      content: "✓";
+      color: var(--success);
+      font-weight: 800;
+      margin-right: 10px;
+    }
+
+    footer {
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding: 28px 0 50px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <span class="badge">Production Deployment Guide</span>
+      <h1>Deploy Laravel lên Ubuntu VPS</h1>
+      <p class="lead">
+        Hướng dẫn thực hành từ VPS mới hoàn toàn đến Laravel chạy qua Nginx, PHP-FPM,
+        MySQL, Redis, Supervisor và HTTPS.
+      </p>
+
+      <div class="stack">
+        <span>Ubuntu 24.04</span>
+        <span>Nginx</span>
+        <span>PHP 8.3</span>
+        <span>Laravel</span>
+        <span>MySQL</span>
+        <span>Redis</span>
+        <span>Supervisor</span>
+        <span>Certbot</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="toc">
+      <h2>Nội dung</h2>
+      <ol>
+        <li><a href="#ssh">SSH vào VPS</a></li>
+        <li><a href="#nginx">Cài Nginx</a></li>
+        <li><a href="#php">Cài PHP</a></li>
+        <li><a href="#composer">Cài Composer</a></li>
+        <li><a href="#clone">Clone project</a></li>
+        <li><a href="#env">Cấu hình .env</a></li>
+        <li><a href="#database">Cấu hình database</a></li>
+        <li><a href="#permission">Permission</a></li>
+        <li><a href="#nginx-config">Nginx config</a></li>
+        <li><a href="#ssl">HTTPS / SSL</a></li>
+        <li><a href="#redis">Redis</a></li>
+        <li><a href="#queue">Queue Worker</a></li>
+        <li><a href="#scheduler">Scheduler</a></li>
+        <li><a href="#deploy">Deploy update</a></li>
+        <li><a href="#checklist">Production checklist</a></li>
+      </ol>
+    </section>
+
+    <section class="section" id="ssh">
+      <h2>1. SSH vào VPS</h2>
+      <p>Thay <span class="inline">YOUR_SERVER_IP</span> bằng IP VPS thực tế.</p>
+      <pre><button class="copy-btn">Copy</button><code>ssh root@YOUR_SERVER_IP
+
+apt update
+apt upgrade -y
+
+adduser deploy
+usermod -aG sudo deploy
+
+su - deploy</code></pre>
+    </section>
+
+    <section class="section" id="nginx">
+      <h2>2. Cài Nginx</h2>
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install nginx -y
+
+sudo systemctl enable nginx
+sudo systemctl start nginx
+sudo systemctl status nginx</code></pre>
+
+      <div class="note">
+        Truy cập <strong>http://YOUR_SERVER_IP</strong>. Nếu thấy trang Welcome to nginx thì web server đã hoạt động.
+      </div>
+    </section>
+
+    <section class="section" id="php">
+      <h2>3. Cài PHP 8.3 + extensions</h2>
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install -y \
+php8.3 \
+php8.3-fpm \
+php8.3-cli \
+php8.3-common \
+php8.3-mysql \
+php8.3-pgsql \
+php8.3-mbstring \
+php8.3-xml \
+php8.3-curl \
+php8.3-zip \
+php8.3-bcmath \
+php8.3-gd \
+php8.3-intl
+
+php -v
+
+sudo systemctl enable php8.3-fpm
+sudo systemctl start php8.3-fpm</code></pre>
+    </section>
+
+    <section class="section" id="composer">
+      <h2>4. Cài Composer và Git</h2>
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install git curl unzip -y
+
+cd /tmp
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php composer-setup.php
+
+sudo mv composer.phar /usr/local/bin/composer
+
+composer --version
+git --version</code></pre>
+    </section>
+
+    <section class="section" id="clone">
+      <h2>5. Clone Laravel project</h2>
+      <pre><button class="copy-btn">Copy</button><code>sudo mkdir -p /var/www/myapp
+sudo chown -R deploy:deploy /var/www/myapp
+
+cd /var/www
+
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git myapp
+
+cd /var/www/myapp
+
+composer install \
+  --no-dev \
+  --prefer-dist \
+  --optimize-autoloader \
+  --no-interaction</code></pre>
+
+      <p>Nếu project dùng Vite:</p>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install nodejs npm -y
+
+npm ci
+npm run build</code></pre>
+    </section>
+
+    <section class="section" id="env">
+      <h2>6. Cấu hình Laravel .env</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>cp .env.example .env
+nano .env</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.example.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=myapp
+DB_USERNAME=myapp
+DB_PASSWORD=CHANGE_ME
+
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>php artisan key:generate</code></pre>
+
+      <div class="note">
+        Production tuyệt đối không nên để <strong>APP_DEBUG=true</strong>.
+      </div>
+    </section>
+
+    <section class="section" id="database">
+      <h2>7. Cài và cấu hình MySQL</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install mysql-server -y
+sudo mysql</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>CREATE DATABASE myapp
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+CREATE USER 'myapp'@'localhost'
+IDENTIFIED BY 'CHANGE_ME_STRONG_PASSWORD';
+
+GRANT ALL PRIVILEGES
+ON myapp.*
+TO 'myapp'@'localhost';
+
+FLUSH PRIVILEGES;
+EXIT;</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>php artisan migrate --force</code></pre>
+    </section>
+
+    <section class="section" id="permission">
+      <h2>8. Permission</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo chown -R deploy:www-data /var/www/myapp
+
+sudo find /var/www/myapp -type f -exec chmod 644 {} \;
+sudo find /var/www/myapp -type d -exec chmod 755 {} \;
+
+sudo chgrp -R www-data storage bootstrap/cache
+sudo chmod -R ug+rwx storage bootstrap/cache</code></pre>
+
+      <div class="note">
+        Không dùng <strong>chmod -R 777</strong> cho toàn bộ project.
+      </div>
+    </section>
+
+    <section class="section" id="nginx-config">
+      <h2>9. Configure Nginx cho Laravel</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo nano /etc/nginx/sites-available/myapp</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>server {
+    listen 80;
+    listen [::]:80;
+
+    server_name api.example.com;
+
+    root /var/www/myapp/public;
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ ^/index\.php(/|$) {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo ln -s \
+/etc/nginx/sites-available/myapp \
+/etc/nginx/sites-enabled/myapp
+
+sudo rm -f /etc/nginx/sites-enabled/default
+
+sudo nginx -t
+sudo systemctl reload nginx</code></pre>
+
+      <div class="note success">
+        Nginx root phải trỏ vào <strong>/var/www/myapp/public</strong>, không phải thư mục root của Laravel.
+      </div>
+    </section>
+
+    <section class="section" id="ssl">
+      <h2>10. HTTPS bằng Certbot</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install certbot python3-certbot-nginx -y
+
+sudo certbot --nginx -d api.example.com
+
+sudo certbot renew --dry-run</code></pre>
+    </section>
+
+    <section class="section" id="redis">
+      <h2>11. Redis</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install redis-server -y
+
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+
+redis-cli ping</code></pre>
+
+      <p>Kết quả mong đợi:</p>
+
+      <pre><code>PONG</code></pre>
+    </section>
+
+    <section class="section" id="queue">
+      <h2>12. Queue Worker bằng Supervisor</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo apt install supervisor -y
+
+sudo nano /etc/supervisor/conf.d/myapp-worker.conf</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>[program:myapp-worker]
+process_name=%(program_name)s_%(process_num)02d
+
+command=php /var/www/myapp/artisan queue:work redis --sleep=3 --tries=3 --timeout=90
+
+autostart=true
+autorestart=true
+
+user=www-data
+numprocs=2
+
+redirect_stderr=true
+stdout_logfile=/var/www/myapp/storage/logs/worker.log
+
+stopwaitsecs=3600</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start myapp-worker:*
+sudo supervisorctl status</code></pre>
+    </section>
+
+    <section class="section" id="scheduler">
+      <h2>13. Laravel Scheduler</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>sudo crontab -u www-data -e</code></pre>
+
+      <pre><button class="copy-btn">Copy</button><code>* * * * * cd /var/www/myapp && php artisan schedule:run >> /dev/null 2>&1</code></pre>
+    </section>
+
+    <section class="section" id="deploy">
+      <h2>14. Deploy khi có code mới</h2>
+
+      <pre><button class="copy-btn">Copy</button><code>cd /var/www/myapp
+
+php artisan down || true
+
+git pull origin main
+
+composer install \
+  --no-dev \
+  --prefer-dist \
+  --optimize-autoloader \
+  --no-interaction
+
+php artisan migrate --force
+
+php artisan optimize:clear
+php artisan optimize
+
+php artisan queue:restart
+
+php artisan up</code></pre>
+
+      <p>Nếu frontend dùng Vite:</p>
+
+      <pre><button class="copy-btn">Copy</button><code>npm ci
+npm run build</code></pre>
+    </section>
+
+    <section class="section" id="checklist">
+      <h2>15. Production Checklist</h2>
+
+      <ul class="checklist">
+        <li>APP_ENV=production</li>
+        <li>APP_DEBUG=false</li>
+        <li>Nginx root trỏ vào /public</li>
+        <li>HTTPS hoạt động</li>
+        <li>Không dùng MySQL root cho application</li>
+        <li>Không expose port 3306 và 6379 ra Internet</li>
+        <li>storage và bootstrap/cache có quyền ghi</li>
+        <li>Queue Worker chạy bằng Supervisor</li>
+        <li>Scheduler chạy bằng cron</li>
+        <li>.env không nằm trong Git</li>
+        <li>Có database backup</li>
+        <li>Có log monitoring</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      Laravel VPS Deployment Guide · Ubuntu + Nginx + PHP-FPM
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".copy-btn").forEach(button => {
+      button.addEventListener("click", async () => {
+        const code = button.parentElement.querySelector("code").innerText;
+
+        try {
+          await navigator.clipboard.writeText(code);
+          const old = button.textContent;
+          button.textContent = "Copied";
+          setTimeout(() => button.textContent = old, 1200);
+        } catch (e) {
+          alert("Không copy được. Hãy copy thủ công.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
